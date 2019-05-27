@@ -1,16 +1,19 @@
+/*
+ * NAME: Zhaoyi Guo
+ * PID: A15180402
+ */
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Array;
 import java.text.DecimalFormat;
 import java.util.LinkedList;
 
-import static java.lang.Integer.parseInt;
-
+/**
+ * class that implements hashTable
+ */
 public class HashTable implements IHashTable {
-	
-	//You will need a HashTable of LinkedLists. 
+	//You will need a HashTable of LinkedLists.
 	
 	private int nelems;  //Number of element stored in the hash table
 	private int expand;  //Number of times that the table has been expanded
@@ -22,19 +25,12 @@ public class HashTable implements IHashTable {
 	LinkedList<String>[] table;
 	double loadFactor;
 	public static final int NUMBITS = 8;
-	final double loadStandard =(double)2/ (double)3;
+	final double loadStandard = (double) 2 / (double) 3;
 	final int expandFactor = 2;
 	private int longestChain;
 	DecimalFormat df = new DecimalFormat("#.##");
 	static int functionFactor = 27;
 	static int WORD_WIDTH = 4 * NUMBITS;
-
-	static int PREISS_HASH_SHIFT = 6;
-//	static int PJW_HASH_SHIFT = 4;
-//	static int PJW_HASH_RIGHT_SHIFT = 24;
-//	static int PJW_HASH_MASK = 0xf0000000;
-//	static int CRC_HASH_SHIFT = 5;
-//	static int PREISS_HASH_MASK = ~0xFFFF << (WORD_WIDTH - PREISS_HASH_SHIFT);
 	static int WEISS_HASH_SHIFT = 5;
 
 
@@ -49,7 +45,7 @@ public class HashTable implements IHashTable {
 	 */
 	public HashTable(int size) {
 		
-		//Initialize
+		//Initialize the array of linked list with the size size
 		table = new LinkedList[size];
 
 	}
@@ -62,7 +58,7 @@ public class HashTable implements IHashTable {
 	 * @param size
 	 * @param fileName
 	 */
-	public HashTable(int size, String fileName){
+	public HashTable(int size, String fileName) {
 		
 		// Set printStats to true and statsFileName to fileName
 		printStats = true;
@@ -81,22 +77,26 @@ public class HashTable implements IHashTable {
 	 */
 	public boolean insert(String value) {
 		
-		//TODO
-
-		loadFactor = (double)nelems / (double)table.length;
+		//get the loading factor, it it exceeds 2/3, we need to rehash
+		loadFactor = (double) nelems / (double) table.length;
 		if (loadFactor > loadStandard)
 			rehash();
+		// throw exception if the value is null
 		if (value == null)
 			throw new NullPointerException();
 		// get the index by using the hash function
 		int curIndex = hashVal(value);
-		if(table[curIndex] == null) {
+		//if there is no linked list at that index, we need to create one
+		if (table[curIndex] == null) {
 			table[curIndex] = new LinkedList<>();
 		}
-		if(table[curIndex].size()>0) {
+		// if there are more than one element int hat linked list we
+		// need to increment nelems
+		if (table[curIndex].size() > 0) {
 			collision++;
 		}
 		nelems++;
+		// add value to the linked list
 		return table[curIndex].add(value);
 	}
 
@@ -112,16 +112,18 @@ public class HashTable implements IHashTable {
 	 */
 	public boolean delete(String value) {
 		
-		//TODO
+		//if the value is null throw exception
 		if (value == null)
 			throw new NullPointerException();
+		// get the index of that value
 		int curIndex = hashVal(value);
-		if(lookup(value)) {
+		//if the value is found, we need to remove it
+		if (lookup(value)) {
 			nelems--;
 			table[curIndex].remove(value);
 			return true;
 		}
-
+		// if not found return false
 		return false;
 	}
 	/**
@@ -133,11 +135,13 @@ public class HashTable implements IHashTable {
 	 */
 	public boolean lookup(String value) {
 		
-		//TODO
+		//if the value is null, throw exception
 		if (value == null)
 			throw new NullPointerException();
 		int curIndex = hashVal(value);
-		if(table[curIndex] == null || !table[curIndex].contains(value)) {
+		// if table at that index is null, or table does not contain than value
+		// return false
+		if (table[curIndex] == null || !table[curIndex].contains(value)) {
 			return false;
 		}
 		return true;
@@ -148,10 +152,11 @@ public class HashTable implements IHashTable {
 	 */
 	public void printTable() {
 
-		//TODO
+		//iterate through the table
 		for (int i = 0; i < table.length; i++) {
 			System.out.print(i + " :");
 			if (table[i] != null) {
+				// iterate through the linked list
 				for (int j = 0; j < table[i].size(); j++) {
 					System.out.print(" " + table[i].get(j));
 				}
@@ -162,11 +167,11 @@ public class HashTable implements IHashTable {
 
 	/**
 	 * Return the number of elements currently stored in the hash table
- 	 * @return
+ 	 * @return nelems
 	 */
 	public int getSize() {
 
-		//TODO
+		//get the total number of elements
 		return nelems;
 	}
 
@@ -177,8 +182,8 @@ public class HashTable implements IHashTable {
 	 */
 	private int hashVal(String str) {
 
-		//TODO
-
+		//hash function from online sources
+		//https://www.cpp.edu/~ftang/courses/CS240/lectures/hashing.htm
 		char[] array = str.toCharArray();
 		int hashValue = 0;
 		for (int i = 0; i < array.length; i++) {
@@ -193,17 +198,20 @@ public class HashTable implements IHashTable {
 	 */
 	private void rehash() {
 
-		//TODO
+		//if the loadfactor exceeds 2/3 we need to rehash
 
 		if (printStats)
 			printStatistics();
+		// everything changes back to empty
 		LinkedList<String>[] table1 = table;
 		table = new LinkedList[table.length * expandFactor];
 		collision = 0;
 		nelems = 0;
+		// iterate through table1,
 		for (int i = 0; i < table1.length; i++) {
-			if(table1[i] == null)
+			if (table1[i] == null)
 				continue;
+			// insert value again to get new index through hash function
 			for (int j = 0; j < table1[i].size(); j++) {
 				insert(table1[i].get(j));
 			}
@@ -218,7 +226,7 @@ public class HashTable implements IHashTable {
 	private void printStatistics() {
 		//* PrintWriter must be put in try catch block to catch
 		//potential exception */
-		String loadFactor1= df.format(loadFactor);
+		String loadFactor1 = df.format(loadFactor);
 		for (int i = 0; i < table.length; i++) {
 			if (table[i] != null && table[i].size() > longestChain)
 				longestChain = table[i].size();

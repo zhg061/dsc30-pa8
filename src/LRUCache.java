@@ -1,15 +1,16 @@
-import javax.xml.soap.Node;
-import java.util.LinkedHashMap;
-import java.util.Map;
+/*
+ * NAME: Zhaoyi Guo
+ * PID: A15180402
+ */
+
 import java.util.HashMap;
-import java.util.AbstractList;
 
 /**
  * Design and implement a data structure for Least Recently Used (LRU) cache
  */
 public class LRUCache {
     private HashMap<Integer, Node> map;
-    private int capacity ;
+    private int capacity;
     private int count;
     private Node head;
     private Node tail;
@@ -19,8 +20,13 @@ public class LRUCache {
         Node pre;
         Node next;
 
-        public Node(int key, int value)
-        {
+        /**
+         * constructor of the Node
+         * @param key
+         * @param value
+         */
+        public Node(int key, int value) {
+            // set the key and value of the instance variables
             this.key = key;
             this.value = value;
         }
@@ -31,6 +37,9 @@ public class LRUCache {
      * @param capacity
      */
     public LRUCache(int capacity) {
+        // create a head node tail node, connect them
+        // set the capacity
+        // set map to a new hash map
         map = new HashMap<>();
         this.capacity = capacity;
         head = new Node(0, 0);
@@ -42,12 +51,23 @@ public class LRUCache {
         count = 0;
     }
 
+    /**
+     * delete the node
+     * @param node
+     */
     public void delete(Node node) {
+        // unlink the node from the pre and its next
         node.pre.next = node.next;
         node.next.pre = node.pre;
     }
 
+    /**
+     * add the node tot he head
+     * @param node
+     */
     public void addToHead(Node node) {
+        // set the node as head,
+        // connect the node to head.next
         node.next = head.next;
         node.next.pre = node;
         node.pre = head;
@@ -66,7 +86,7 @@ public class LRUCache {
 
         // if the map does not contain the key,
         // or the value at key is negative, return -1
-        if(map.get(keyCopy) == null || map.get(keyCopy).value < 0
+        if (map.get(keyCopy) == null || map.get(keyCopy).value < 0
                  || !map.containsKey(keyCopy))
             return -1;
         // get the value at the key
@@ -87,22 +107,23 @@ public class LRUCache {
      * @param value
      */
     public void set(int key, int value) {
-//        if (value < 0)
-//            return;
+        // create a new node
         int keyCopy = key;
         Node valueCopy = new Node(key, value);
 
         //if the key is not in the map
-        if(!map.containsKey(keyCopy)) {
+        if (!map.containsKey(keyCopy)) {
             map.put(key, valueCopy);
             //remove the least recently used frame when the cache is full
-            if(count == capacity) {
-                // not sure to remove tail.prev or tail.prev.key
+            if (count == capacity) {
+                // remove tail.prev.key from the map
                 map.remove(tail.pre.key);
                 delete(tail.pre);
                 addToHead(valueCopy);
 
             }
+            // if the capacity doesn't reach,
+            // increment count
             else {
                 count++;
                 addToHead(valueCopy);
@@ -112,17 +133,13 @@ public class LRUCache {
         else {
             Node node = map.get(keyCopy);
             delete(node);
+            // replace the node with new node of that key
             map.replace(keyCopy,  valueCopy);
             node.value = value;
-//            map.remove(map.get(key));
             addToHead(valueCopy);
-//            map.put(keyCopy, valueCopy);
-
         }
-        }
-
-
     }
+}
 
 
 

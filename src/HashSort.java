@@ -1,3 +1,7 @@
+/*
+ * NAME: Zhaoyi Guo
+ * PID: A15180402
+ */
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -7,13 +11,7 @@ import java.util.LinkedList;
 
 public class HashSort {
     private static HashTable ht;
-    private int[] arr;
-    private int min, max, bucketSize, n, range;
-
-    public class HashTable implements IHashTable {
-
-        //You will need a HashTable of LinkedLists.
-
+    protected class HashTable {
         private int nelems;  //Number of element stored in the hash table
         private int expand;  //Number of times that the table has been expanded
         private int collision;  //Number of collisions since last expansion
@@ -21,18 +19,19 @@ public class HashSort {
         private boolean printStats = false;   //Boolean to decide whether to write statistics to file or not after rehashing
 
         //You are allowed to add more :)
-        LinkedList<String>[] table;
+        LinkedList<Integer>[] table;
         double loadFactor;
         public static final int NUMBITS = 8;
-        final double loadStandard =(double)2/ (double)3;
+        final double loadStandard = (double) 2 / (double) 3;
         final int expandFactor = 2;
         private int longestChain;
         DecimalFormat df = new DecimalFormat("#.##");
         final int functionFactor = 27;
-        final int WORD_WIDTH = 4 * NUMBITS;
-        final int PREISS_HASH_SHIFT = 6;
-        final int WEISS_HASH_SHIFT = 5;
-
+        int max;
+        int min;
+        int n;
+        int range;
+        int bucketSize;
 
 
 
@@ -41,12 +40,16 @@ public class HashSort {
          * If a user uses this constructor, printStats should be set
          * to false and do not use printTable() to
          * print the stats before each resizing.
-         * @param size
+         * @param arr, min, max
          */
-        public HashTable(int size) {
+        public HashTable(int[] arr, int min, int max) {
 
-            //Initialize
-            table = new LinkedList[size];
+            //Initialize arr, min, max, n, bucketSize, range
+            this.table = new LinkedList[max - min + 1];
+            this.n = arr.length;
+            this.range = max - min + 1;
+            this.bucketSize = (range + n - 1) / n;
+
 
         }
 
@@ -58,42 +61,12 @@ public class HashSort {
          * @param size
          * @param fileName
          */
-        public HashTable(int size, String fileName){
+        public HashTable(int size, String fileName) {
 
             // Set printStats to true and statsFileName to fileName
             printStats = true;
             statsFileName = fileName;
             table = new LinkedList[size];
-        }
-
-        /**
-         * Inserts a value into the hash table.
-         * Return true if value is successfully inserted,
-         * false if it can’t be inserted (a value can’t be inserted
-         * if it already exists in the hash table).
-         * Throw a NullPointerException if a null value is passed.
-         * @param value value to insert
-         * @return
-         */
-        public boolean insert(int value) {
-
-            //TODO
-
-            loadFactor = (double)nelems / (double)table.length;
-            if (loadFactor > loadStandard)
-                rehash();
-            if (value <= 0)
-                throw new NullPointerException();
-            // get the index by using the hash function
-            int curIndex = hashVal(value);
-            if(table[curIndex] == null) {
-                table[curIndex] = new LinkedList<>();
-            }
-            if(table[curIndex].size()>0) {
-                collision++;
-            }
-            nelems++;
-            return table[curIndex].add(value);
         }
 
         /**
@@ -106,13 +79,13 @@ public class HashSort {
          * @param value value to delete
          * @return
          */
-        public boolean delete(int value) {
-
-            //TODO
+        public boolean delete(int value, int i) {
+            //delete the value from the table
             if (value <= 0)
                 throw new NullPointerException();
             int curIndex = hashVal(value);
-            if(lookup(value)) {
+            // if the value is found, deleted it, and return true
+            if (lookup(value, i)) {
                 nelems--;
                 table[curIndex].remove(value);
                 return true;
@@ -125,28 +98,25 @@ public class HashSort {
          * Return true if the hash table contains the value, false otherwise.
          * Throw a NullPointerException if a null value is passed.
          * @param value value to delete
-         * @return
+         * @return true if value is found, false otherwise
          */
-        public boolean lookup(int value) {
-
-            //TODO
+        public boolean lookup(int value, int i) {
+            //check if the value is in the table
             if (value <= 0)
                 throw new NullPointerException();
             int curIndex = hashVal(value);
-            if(table[curIndex] == null || !table[curIndex].contains(value)) {
+            if (table[curIndex] == null || !table[curIndex].contains(value)) {
                 return false;
             }
             return true;
         }
-
-
 
         /**
          * Print out the hash table
          */
         public void printTable() {
 
-            //TODO
+            //iterate through the loop to print the table
             for (int i = 0; i < table.length; i++) {
                 System.out.print(i + " :");
                 if (table[i] != null) {
@@ -164,51 +134,84 @@ public class HashSort {
          */
         public int getSize() {
 
-            //TODO
+            //get the total num of values in the table
             return nelems;
         }
 
-        /**
-         * Return the hash value of the given string.
-         * @param str
-         * @return
-         */
-        private int hashVal(int str) {
 
-            //TODO
 
-//            char[] array = str.toCharArray();
-            int hashValue = 0;
-            for (int i = 0; i < str; i++) {
-                hashValue = (hashValue * functionFactor) + (int) (array[i]);
-                hashValue %= table.length;
-            }
-            return hashValue;
+    /**
+     * Inserts a value into the hash table.
+     * Return true if value is successfully inserted,
+     * false if it can’t be inserted (a value can’t be inserted
+     * if it already exists in the hash table).
+     * Throw a NullPointerException if a null value is passed.
+     * @param value value to insert
+     * @return
+     */
+    public void insert(int value) {
+        //check whether we need to rehash
+        loadFactor = (double) nelems / (double) table.length;
+        if (loadFactor > loadStandard)
+            rehash();
+        // get the index by using the hash function
+        int curIndex = hashVal(value);
+        // if table at that index is empty, create a new linked list
+        if (table[curIndex] == null) {
+            table[curIndex] = new LinkedList<>();
         }
+        nelems++;
+        // if table at that index has other values (collision), we need to put
+        // the new index at certain position so it's in ascending order
 
-        /**
-         * Double the size of hash table and rehash all the entries.
-         */
-        private void rehash() {
-
-            //TODO
-
-            if (printStats)
-                printStatistics();
-            LinkedList<String>[] table1 = table;
-            table = new LinkedList[table.length * expandFactor];
-            collision = 0;
-            nelems = 0;
-            for (int i = 0; i < table1.length; i++) {
-                if(table1[i] == null)
-                    continue;
-                for (int j = 0; j < table1[i].size(); j++) {
-                    insert(table1[i].get(j));
+        int element = 0;
+        if (table[curIndex].size() > 0) {
+            collision++;
+            for (int i = 0; i < table[curIndex].size(); i++) {
+                if (table[curIndex].get(i) < value) {
+                    element++;
                 }
             }
-            expand++;
+            table[curIndex].add(element, value);
+        }
+        else {
+            table[curIndex].add(value);
+        }
+
 
         }
+        /**
+         * Return the hash value of the given string.
+         * @param value
+         * @return
+         */
+         private int hashVal(int value) {
+             //get the index of the value by hash table
+             int result = (value - min) / bucketSize;
+             return result;
+         }
+
+     /**
+      * Double the size of hash table and rehash all the entries.
+      */
+         private void rehash() {
+             //desize the table, and reinsert the value into the table
+             if (printStats)
+                printStatistics();
+             LinkedList<Integer>[] table1 = table;
+             table = new LinkedList[table.length * expandFactor];
+             collision = 0;
+             nelems = 0;
+             for (int i = 0; i < table1.length; i++) {
+                 if (table1[i] == null)
+                     continue;
+                 for (int j = 0; j < table1[i].size(); j++) {
+                     insert(table1[i].get(j));
+                 }
+             }
+             expand++;
+
+         }
 
         /**
          * Print statistics of your hash table
@@ -216,7 +219,7 @@ public class HashSort {
         private void printStatistics() {
             //* PrintWriter must be put in try catch block to catch
             //potential exception */
-            String loadFactor1= df.format(loadFactor);
+            String loadFactor1 = df.format(loadFactor);
             for (int i = 0; i < table.length; i++) {
                 if (table[i] != null && table[i].size() > longestChain)
                     longestChain = table[i].size();
@@ -225,7 +228,8 @@ public class HashSort {
                 PrintWriter pw = new PrintWriter(new FileOutputStream(new
                         File(statsFileName), true));
                 pw.println(expand + " resizes, load factor "
-                        + loadFactor1 + ", " + collision + " collisions, " + longestChain + " longest chain");
+                        + loadFactor1 + ", " + collision + " collisions, "
+                        + longestChain + " longest chain");
                 pw.close();
             } catch (IOException e) { // If the given file doesn’t exist
                 System.out.println("File not found!");
@@ -236,34 +240,46 @@ public class HashSort {
         }
     }
 
+    /**
+     * constructor that set the range, and the new hashTable
+     * @param arr
+     * @param min
+     * @param max
+     */
     public HashSort(int[] arr, int min, int max) {
-        this.n = arr.length;
-        this.arr = arr;
-        this.min = min;
-        this.max = max;
-        this.range = max - min;
-        this.bucketSize = (range + n - 1) / n;
-        ht = new HashTable(range);
+        int range = max - min + 1;
+        ht = new HashTable(arr, min, max);
+
     }
+
+    /**
+     * sort the arr with hashTable
+     * @param arr
+     * @param min
+     * @param max
+     * @return the new sorted array
+     */
     public static int[] sort(int[] arr, int min, int max) {
-        int[] result = new int[max - min];
+        int n = arr.length;
+        // size is for record which index of the result should
+        // i insert value
+        int size = 0;
+        int[] result = new int[arr.length];
+        // put the element in the hashTable
         for (int i = 0; i < arr.length; i++) {
             ht.insert(arr[i]);
         }
-        for (int i = 0; i < arr.length; i++) {
-            int j = i;
-            // compare the previous list element to the current list element
-            // if the previous element is greater than the current element, swap them
-            while (j > 0 && arr[j] > arr[j - 1]) {
-                int temp = arr[j];
-                arr[j] = arr[j - 1];
-                arr[j - 1] = temp;
-                // decrease j by 1, and maybe iterate the while loop again
-                j--;
+        // put the value in that table into array
+        for (int i = 0; i < ht.table.length; i++) {
+            // if the current linked list is not empty, we
+            // put the value into array
+            if (ht.table[i] != null && ht.table[i].size() > 0) {
+                for (int j = 0; j < ht.table[i].size(); j++) {
+                    result[size] = ht.table[i].get(j);
+                    size++;
+                }
             }
-//            for (int m = 0; m < )
         }
         return result;
     }
-
 }

@@ -1,3 +1,7 @@
+/*
+ * NAME: Zhaoyi Guo
+ * PID: A15180402
+ */
 import java.io.*;
 import java.util.Scanner;
 
@@ -12,17 +16,14 @@ import java.util.Scanner;
  * malicious URL file contains 30000 URLs, then you should use at most 45000 bytes in your bloom filter.
  */
 public class Firewall {
+    static double changeInput = 1.5;
+    static int PERCENTAGE = 100;
     /**
      * Main method that drives this program
      * @param args the command line argument
      */
 
     public static void main(String args[]) {
-
-        //TODO
-
-
-
 
         // Get the size of badURL in bytes
         File badURL = new File(args[0]);
@@ -33,7 +34,7 @@ public class Firewall {
         long bloomSize = 0;
         try {
             Scanner scLine = new Scanner(badURL);    //scan lines in file
-            while (scLine.hasNextLine()) {//if the file has next line
+            while (scLine.hasNextLine()) { //if the bad url file has next line
                 String singleBad = scLine.nextLine();
                 falseInputs++;
             }
@@ -41,8 +42,7 @@ public class Firewall {
         }
         catch (FileNotFoundException e) {
         }
-        BloomFilter bf = new BloomFilter((int) (falseInputs * 1.5));
-//        magic
+        BloomFilter bf = new BloomFilter((int) (falseInputs * changeInput));
         try {
             Scanner scLine = new Scanner(badURL);    //scan lines in file
             while (scLine.hasNextLine()) {//if the file has next line
@@ -58,9 +58,8 @@ public class Firewall {
         File allURL = new File(args[1]);
         try {
             Scanner scLine = new Scanner(allURL);    //scan lines in file
-            while (scLine.hasNextLine()) {//if the file has next line
+            while (scLine.hasNextLine()) { //if the file has next line
                 String single = scLine.nextLine();
-//                bf.insert(single);
                 allInput++;
             }
             bloomSize = bf.numSlots;
@@ -68,13 +67,13 @@ public class Firewall {
         }
         catch (FileNotFoundException e) {
         }
-        /* PrintWriter must be put in try catch block to catch
-   potential exception */
+        // PrintWriter must be put in try catch block to catch
+        // potential exception
         File goodURL = new File(args[2]);
         try {
             PrintWriter pw = new PrintWriter(new FileOutputStream(goodURL,true));
             Scanner scLine = new Scanner(allURL);    //scan lines in file
-            while (scLine.hasNextLine()) {//if the file has next line
+            while (scLine.hasNextLine()) { //if the file has next line
                 String singleURL = scLine.nextLine();
                 if (!bf.find(singleURL)) {
                     actualLength++;
@@ -83,7 +82,6 @@ public class Firewall {
                 }
             }
             scLine.close();
-//            pw.println("Example");
             pw.close();
         }
         catch (IOException e) { // If the given file doesn’t exist
@@ -93,9 +91,9 @@ public class Firewall {
 
 
         // print statistics
-        System.out.println("False positive rate: " + 100*(((allInput- falseInputs) - actualLength )
-                /(allInput- falseInputs)));
-        System.out.println("Saved memory ratio: " + inputSize/(falseInputs * 1.5));
+        System.out.println("False positive rate: "
+                + PERCENTAGE *(((allInput - falseInputs) - actualLength ) / (allInput - falseInputs)));
+        System.out.println("Saved memory ratio: " + inputSize / (falseInputs * changeInput));
     }
 
 }
